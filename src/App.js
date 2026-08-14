@@ -1,9 +1,17 @@
 import React from "react";
 import Sidebar from "./components/Sidebar";
 
+import Navbar from "./components/Navbar";
+
 const App = () => {
   return (
-    <Sidebar />
+    <div>
+      <Sidebar />
+
+      <main className="ml-64">
+        <Navbar />
+      </main>
+    </div>
   );
 };
 
