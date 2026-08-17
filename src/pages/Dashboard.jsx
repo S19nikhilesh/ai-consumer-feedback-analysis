@@ -1,5 +1,6 @@
 import StatCard from "../components/StatCard";
 import SentimentChart from "../components/SentimentChart";
+import RecentFeedback from "../components/RecentFeedback";
 
 const Dashboard = () => {
   return (
@@ -27,6 +28,7 @@ const Dashboard = () => {
     <div className="grid grid-cols-2 gap-5 mt-6">
         <SentimentChart />
     </div>
+    <RecentFeedback />
     </div>
   );
 };
