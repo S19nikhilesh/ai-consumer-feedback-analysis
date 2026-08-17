@@ -7,7 +7,9 @@ import {
     Settings,
     LogOut,
   } from "lucide-react";
-  
+
+import { Link } from "react-router-dom";
+
   const Sidebar = () => {
     return (
       <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-950 text-white flex flex-col">
@@ -37,35 +39,45 @@ import {
               <span className="text-sm font-medium">Dashboard</span>
             </button>
   
-            <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
+            <Link
+              to="/upload"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
               <Upload size={19} />
               <span className="text-sm font-medium">Upload Feedback</span>
-            </button>
+            </Link>
   
-            <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
+            <Link
+              to="/analysis"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
               <BarChart3 size={19} />
               <span className="text-sm font-medium">Analysis</span>
-            </button>
+            </Link>
   
-            <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
+            <Link
+              to="/reports"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
               <FileText size={19} />
               <span className="text-sm font-medium">Reports</span>
-            </button>
+            </Link>
   
-            <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
+            <Link
+              to="/history"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
               <History size={19} />
               <span className="text-sm font-medium">History</span>
-            </button>
+            </Link>
           </div>
   
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 px-3 mt-8 mb-3">
             System
           </p>
   
-          <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
-            <Settings size={19} />
-            <span className="text-sm font-medium">Settings</span>
-          </button>
+          <Link
+              to="/settings"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition">
+              <Settings size={19} />
+              <span className="text-sm font-medium">Settings</span>
+          </Link>
         </nav>
   
       
