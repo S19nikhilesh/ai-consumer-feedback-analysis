@@ -8,16 +8,21 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const issueData = [
-  { name: "Transaction Failure", value: 320 },
-  { name: "Customer Support", value: 240 },
-  { name: "Login Issue", value: 180 },
-  { name: "App Performance", value: 150 },
-  { name: "Security", value: 110 },
-  { name: "UI / UX", value: 90 },
-];
 
-const IssueCategoryChart = () => {
+const IssueCategoryChart = ({ categories }) => {
+
+  const issueData = categories.map((category) => ({
+
+    name: category.name,
+
+    value:
+      category.positive +
+      category.neutral +
+      category.negative,
+
+  }));
+
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6">
 
@@ -29,13 +34,19 @@ const IssueCategoryChart = () => {
         Most frequently reported problems
       </p>
 
+
       <div className="h-72 mt-4">
+
         <ResponsiveContainer width="100%" height="100%">
+
           <BarChart data={issueData}>
 
             <CartesianGrid strokeDasharray="3 3" />
 
-            <XAxis dataKey="name" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 12 }}
+            />
 
             <YAxis />
 
@@ -48,11 +59,14 @@ const IssueCategoryChart = () => {
             />
 
           </BarChart>
+
         </ResponsiveContainer>
+
       </div>
 
     </div>
   );
 };
+
 
 export default IssueCategoryChart;
