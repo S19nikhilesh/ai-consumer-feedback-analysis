@@ -1,9 +1,14 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { datasets } from "../data/dummyData";
 
 const Analysis = () => {
+  const [searchParams] = useSearchParams();
+
+  const datasetFromUrl = searchParams.get("dataset");
+  
   const [selectedDatasetId, setSelectedDatasetId] = useState(
-    datasets[0]?.id || ""
+    datasetFromUrl || datasets[0]?.id || ""
   );
 
   const [searchTerm, setSearchTerm] = useState("");

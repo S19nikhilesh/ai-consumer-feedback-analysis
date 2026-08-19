@@ -7,7 +7,6 @@ import Dashboard from "./pages/Dashboard";
 import UploadFeedback from "./pages/UploadFeedback";
 import Analysis from "./pages/Analysis";
 import History from "./pages/History";
-import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
 import AnalysisProcessing from "./pages/AnalysisProcessing";
@@ -26,7 +25,6 @@ const App = () => {
             <Route path="/upload" element={<UploadFeedback />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/history" element={<History />} />
-            <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
 
             <Route path="/analysis/processing" element={<AnalysisProcessing />}/>

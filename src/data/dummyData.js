@@ -180,4 +180,161 @@ export const datasets = [
       },
     ],
   },
+
+
+  // =========================================================
+  // JULY 2026
+  // =========================================================
+
+  {
+    id: "july-2026",
+    fileName: "July_Feedback.csv",
+    uploadedAt: "July 31, 2026",
+    totalReviews: 15,
+
+    sentiment: {
+      positive: 8,
+      negative: 4,
+      neutral: 3,
+    },
+
+    categories: [
+      {
+        name: "Transaction Failure",
+        positive: 2,
+        neutral: 0,
+        negative: 3,
+      },
+      {
+        name: "Customer Support",
+        positive: 2,
+        neutral: 1,
+        negative: 1,
+      },
+      {
+        name: "Login Issues",
+        positive: 1,
+        neutral: 1,
+        negative: 1,
+      },
+      {
+        name: "App Performance",
+        positive: 2,
+        neutral: 0,
+        negative: 0,
+      },
+      {
+        name: "Refund Issues",
+        positive: 0,
+        neutral: 1,
+        negative: 1,
+      },
+      {
+        name: "Authentication",
+        positive: 1,
+        neutral: 0,
+        negative: 0,
+      },
+    ],
+
+    insights: [
+      "Transaction failures remained the largest source of negative feedback.",
+      "Overall sentiment improved compared with the previous period.",
+      "Customers responded positively to improvements in application performance.",
+      "Refund-related complaints still require attention.",
+    ],
+
+    reviews: [
+      {
+        id: 1,
+        text: "Payment failed during checkout.",
+        sentiment: "Negative",
+        category: "Transaction Failure",
+      },
+      {
+        id: 2,
+        text: "The application is much faster now.",
+        sentiment: "Positive",
+        category: "App Performance",
+      },
+      {
+        id: 3,
+        text: "Customer support resolved my issue quickly.",
+        sentiment: "Positive",
+        category: "Customer Support",
+      },
+      {
+        id: 4,
+        text: "I was unable to complete the transaction.",
+        sentiment: "Negative",
+        category: "Transaction Failure",
+      },
+      {
+        id: 5,
+        text: "Login worked perfectly after the update.",
+        sentiment: "Positive",
+        category: "Login Issues",
+      },
+      {
+        id: 6,
+        text: "Refund is still being processed.",
+        sentiment: "Neutral",
+        category: "Refund Issues",
+      },
+      {
+        id: 7,
+        text: "The app loads very quickly.",
+        sentiment: "Positive",
+        category: "App Performance",
+      },
+      {
+        id: 8,
+        text: "OTP verification works reliably now.",
+        sentiment: "Positive",
+        category: "Authentication",
+      },
+      {
+        id: 9,
+        text: "My payment failed twice.",
+        sentiment: "Negative",
+        category: "Transaction Failure",
+      },
+      {
+        id: 10,
+        text: "Support response was acceptable.",
+        sentiment: "Neutral",
+        category: "Customer Support",
+      },
+      {
+        id: 11,
+        text: "The new interface is simple and easy to understand.",
+        sentiment: "Positive",
+        category: "UI/UX",
+      },
+      {
+        id: 12,
+        text: "I had difficulty signing into my account.",
+        sentiment: "Negative",
+        category: "Login Issues",
+      },
+      {
+        id: 13,
+        text: "The refund process is taking longer than expected.",
+        sentiment: "Negative",
+        category: "Refund Issues",
+      },
+      {
+        id: 14,
+        text: "The service is working as expected.",
+        sentiment: "Neutral",
+        category: "Customer Support",
+      },
+      {
+        id: 15,
+        text: "Overall the application provides a good experience.",
+        sentiment: "Positive",
+        category: "App Performance",
+      },
+    ],
+  },
 ];
