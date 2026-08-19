@@ -1,8 +1,10 @@
-const RecentFeedback = ({ reviews }) => {
+import { useNavigate } from "react-router-dom";
+
+const RecentFeedback = ({ reviews,datasetId }) => {
 
   // Dashboard par sirf latest 4 reviews dikhayenge.
   const recentReviews = reviews.slice(0, 4);
-
+  const navigate = useNavigate();
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
@@ -25,7 +27,8 @@ const RecentFeedback = ({ reviews }) => {
         </div>
 
 
-        <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+        <button className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        onClick={()=>navigate(`/analysis?dataset=${datasetId}`)}>
           View All
         </button>
 

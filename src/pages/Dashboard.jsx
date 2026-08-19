@@ -121,6 +121,7 @@ const Dashboard = () => {
 
       <RecentFeedback
         reviews={reviews}
+        datasetId={latestDataset.id}
       />
 
     </div>

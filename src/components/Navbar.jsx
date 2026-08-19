@@ -1,44 +1,146 @@
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Home } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 const Navbar = () => {
-    return (
-      <header className="h-20 bg-white border-b border-slate-200">
-        <div className="h-full px-8 flex items-center justify-between">
-          
-            <div>
-                <h1 className="text-xl font-semibold text-slate-900">
-                Dashboard
-                </h1>
-  
-                <p className="text-sm text-slate-500">
-                Consumer feedback overview
-                </p>
-            </div>
+  const location = useLocation();
 
-            <div className="flex items-center gap-5">
+  const pageInfo = {
+    "/": {
+      title: "Dashboard",
+      subtitle: "Overview of your consumer feedback",
+    },
 
-                <button className="relative text-slate-500 hover:text-slate-900">
-                    <Bell size={20} />
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500"></span>
-                </button>
+    "/upload": {
+      title: "Upload Feedback",
+      subtitle: "Upload consumer feedback for analysis",
+    },
 
-                <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-sm font-semibold text-blue-700">NS</span>
-                    </div>
+    "/analysis": {
+      title: "Detailed Analysis",
+      subtitle: "Explore insights from your feedback",
+    },
 
-                    <div>
-                        <p className="text-sm font-medium text-slate-800">Nikhilesh</p>
-                        <p className="text-xs text-slate-500">CSE Student</p>
-                    </div>
+    "/analysis/processing": {
+      title: "Processing Analysis",
+      subtitle: "Your feedback is being analyzed",
+    },
 
-                    <ChevronDown size={16} className="text-slate-400" />
-                </div>
+    "/history": {
+      title: "Analysis History",
+      subtitle: "View your previous feedback analyses",
+    },
 
-            </div>
-        </div>
-      </header>
-    );
+    "/settings": {
+      title: "Settings",
+      subtitle: "Manage your account and preferences",
+    },
   };
-  
+
+  const currentPage = pageInfo[location.pathname] || {
+    title: "Consumer Feedback Analytics",
+    subtitle: "Monitor and analyze consumer feedback",
+  };
+
+  return (
+    <header className="h-20 bg-white border-b border-slate-200">
+      <div className="h-full px-8 flex items-center justify-between">
+
+        {/* LEFT */}
+
+        <div className="flex items-center gap-4">
+
+          {/* Small Home Indicator */}
+
+          <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center">
+            <Home
+              size={17}
+              className="text-slate-500"
+            />
+          </div>
+
+
+          <div className="h-8 w-px bg-slate-200" />
+
+
+          <div>
+
+            <h1 className="text-lg font-semibold text-slate-900 leading-tight">
+              {currentPage.title}
+            </h1>
+
+            <p className="text-xs text-slate-500 mt-1">
+              {currentPage.subtitle}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        {/* RIGHT */}
+
+        <div className="flex items-center gap-3">
+
+
+          {/* Notification */}
+
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+          >
+
+            <Bell size={18} />
+
+            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-red-500" />
+
+          </button>
+
+
+          {/* Divider */}
+
+          <div className="h-8 w-px bg-slate-200 mx-1" />
+
+
+          {/* Profile */}
+
+          <button
+            type="button"
+            className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition"
+          >
+
+            <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center">
+              <span className="text-xs font-semibold text-white">
+                NS
+              </span>
+            </div>
+
+
+            <div className="text-left hidden sm:block">
+
+              <p className="text-sm font-medium text-slate-800 leading-tight">
+                Nikhilesh
+              </p>
+
+              <p className="text-xs text-slate-500 mt-0.5">
+                CSE Student
+              </p>
+
+            </div>
+
+
+            <ChevronDown
+              size={16}
+              className="text-slate-400"
+            />
+
+          </button>
+
+        </div>
+
+      </div>
+    </header>
+  );
+};
+
 export default Navbar;
