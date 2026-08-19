@@ -8,8 +8,7 @@ import IssueCategoryChart from "../components/IssueCategoryChart";
 
 const Dashboard = () => {
 
-  // datasets array mein latest dataset sabse upar rakha hai.
-  // Isliye [0] current latest analysis ko represent karta hai.
+  
   const latestDataset = datasets[0];
 
 
