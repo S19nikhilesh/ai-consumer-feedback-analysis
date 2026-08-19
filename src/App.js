@@ -10,6 +10,8 @@ import History from "./pages/History";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
+import AnalysisProcessing from "./pages/AnalysisProcessing";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -26,6 +28,9 @@ const App = () => {
             <Route path="/history" element={<History />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+
+            <Route path="/analysis/processing" element={<AnalysisProcessing />}/>
+
           </Routes>
         </main>
       </div>

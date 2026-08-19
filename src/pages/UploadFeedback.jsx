@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Upload, FileText, X } from "lucide-react";
+import {useNavigate} from "react-router-dom"
+
+
 
 const UploadFeedback = () => {
   const [file, setFile] = useState(null);
-
-  const handleFileChange = (e) => {
+  const navigate = useNavigate();
+  
+  const  handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
     if (!selectedFile) return;
@@ -123,7 +127,7 @@ const UploadFeedback = () => {
 
             {/* Analyze Button */}
             <button
-              disabled={!file}
+              disabled={!file} onClick={() => navigate("/analysis/processing")}
               className="w-full mt-5 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Analyze Feedback
