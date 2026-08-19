@@ -1,14 +1,23 @@
 import { useEffect, useState } from "react";
 import { Brain, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 const AnalysisProcessing = () => {
   const [progress, setProgress] = useState(0);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
+
+          setTimeout(() => {
+            navigate("/analysis");
+          }, 1000);
+
           return 100;
         }
 
