@@ -1,14 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Eye } from "lucide-react";
 
-import { datasets } from "../data/dummyData";
+import { getDatasets } from "../services/api";
 
 const History = () => {
-
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [datasets, setDatasets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // =====================================================
+  // LOAD DATASETS
+  // =====================================================
+
+  useEffect(() => {
+    const loadDatasets = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        const data = await getDatasets(token);
+
+        setDatasets(data.datasets || []);
+      } catch (error) {
+        console.error("Failed to load history:", error);
+
+        setError(
+          error.message || "Failed to load analysis history."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDatasets();
+  }, [navigate]);
+
+  // =====================================================
+  // SEARCH
+  // =====================================================
 
   const filteredDatasets = datasets.filter((dataset) =>
     dataset.fileName
@@ -16,17 +56,71 @@ const History = () => {
       .includes(searchTerm.toLowerCase())
   );
 
+  // =====================================================
+  // VIEW ANALYSIS
+  // =====================================================
 
   const handleViewAnalysis = (datasetId) => {
-
-    navigate(`/analysis?dataset=${datasetId}`);
-
+    navigate("/analysis", {
+      state: {
+        datasetId,
+      },
+    });
   };
 
+  // =====================================================
+  // LOADING
+  // =====================================================
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Loading Analysis History...
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            Fetching your previous analyses.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // ERROR
+  // =====================================================
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-red-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-red-600">
+            Failed to Load History
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            {error}
+          </p>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="p-8">
-
 
       {/* ================= HEADER ================= */}
 
@@ -41,8 +135,6 @@ const History = () => {
         </p>
 
       </div>
-
-
 
       {/* ================= SEARCH ================= */}
 
@@ -67,8 +159,6 @@ const History = () => {
 
       </div>
 
-
-
       {/* ================= HISTORY TABLE ================= */}
 
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -85,8 +175,6 @@ const History = () => {
           </p>
 
         </div>
-
-
 
         {filteredDatasets.length > 0 ? (
 
@@ -126,31 +214,47 @@ const History = () => {
 
               </thead>
 
-
-
               <tbody>
 
                 {filteredDatasets.map((dataset) => {
 
-                  const positivePercentage = Math.round(
-                    (dataset.sentiment.positive /
-                      dataset.totalReviews) *
-                      100
-                  );
+                  const totalReviews =
+                    dataset.totalReviews || 0;
 
-                  const negativePercentage = Math.round(
-                    (dataset.sentiment.negative /
-                      dataset.totalReviews) *
-                      100
-                  );
+                  const positivePercentage =
+                    totalReviews > 0
+                      ? Math.round(
+                          (dataset.sentiment.positive /
+                            totalReviews) *
+                            100
+                        )
+                      : 0;
+
+                  const negativePercentage =
+                    totalReviews > 0
+                      ? Math.round(
+                          (dataset.sentiment.negative /
+                            totalReviews) *
+                            100
+                        )
+                      : 0;
+
+                  const uploadedDate = dataset.uploadedAt
+                    ? new Date(
+                        dataset.uploadedAt
+                      ).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "—";
 
                   return (
 
                     <tr
-                      key={dataset.id}
+                      key={dataset._id}
                       className="border-b border-slate-100 last:border-none hover:bg-slate-50 transition"
                     >
-
 
                       {/* FILE */}
 
@@ -163,38 +267,32 @@ const History = () => {
                           </p>
 
                           <p className="text-xs text-slate-400 mt-1">
-                            ID: {dataset.id}
+                            ID: {dataset._id}
                           </p>
 
                         </div>
 
                       </td>
 
-
-
                       {/* DATE */}
 
                       <td className="px-6 py-5">
 
                         <p className="text-sm text-slate-600">
-                          {dataset.uploadedAt}
+                          {uploadedDate}
                         </p>
 
                       </td>
-
-
 
                       {/* REVIEWS */}
 
                       <td className="px-6 py-5 text-center">
 
                         <span className="text-sm font-medium text-slate-700">
-                          {dataset.totalReviews}
+                          {totalReviews}
                         </span>
 
                       </td>
-
-
 
                       {/* SENTIMENT */}
 
@@ -214,8 +312,6 @@ const History = () => {
 
                       </td>
 
-
-
                       {/* STATUS */}
 
                       <td className="px-6 py-5">
@@ -226,15 +322,15 @@ const History = () => {
 
                       </td>
 
-
-
                       {/* ACTION */}
 
                       <td className="px-6 py-5 text-right">
 
                         <button
                           onClick={() =>
-                            handleViewAnalysis(dataset.id)
+                            handleViewAnalysis(
+                              dataset._id
+                            )
                           }
                           className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
                         >
@@ -250,7 +346,6 @@ const History = () => {
                     </tr>
 
                   );
-
                 })}
 
               </tbody>
@@ -270,7 +365,9 @@ const History = () => {
             </p>
 
             <p className="text-sm text-slate-500 mt-1">
-              Try searching with a different file name.
+              {searchTerm
+                ? "Try searching with a different file name."
+                : "Upload and analyze a feedback file to see it here."}
             </p>
 
           </div>

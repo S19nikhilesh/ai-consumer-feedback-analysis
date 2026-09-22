@@ -1,15 +1,21 @@
-import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { datasets } from "../data/dummyData";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getDatasets, getDatasetById } from "../services/api";
 
 const Analysis = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const datasetFromUrl = searchParams.get("dataset");
-  
+  const [datasets, setDatasets] = useState([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState(
-    datasetFromUrl || datasets[0]?.id || ""
+    location.state?.datasetId || ""
   );
+
+  const [selectedDataset, setSelectedDataset] = useState(null);
+
+  const [loadingDatasets, setLoadingDatasets] = useState(true);
+  const [loadingDataset, setLoadingDataset] = useState(false);
+  const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sentimentFilter, setSentimentFilter] = useState("All");
@@ -18,67 +24,121 @@ const Analysis = () => {
 
   const reviewsPerPage = 10;
 
-  const selectedDataset = datasets.find(
-    (dataset) => dataset.id === selectedDatasetId
-  );
+  // =====================================================
+  // LOAD ALL DATASETS
+  // =====================================================
 
-  if (!selectedDataset) {
-    return (
-      <div className="p-8">
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
-          <h2 className="text-xl font-semibold text-slate-900">
-            No Analysis Available
-          </h2>
+  useEffect(() => {
+    const loadDatasets = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-          <p className="text-sm text-slate-500 mt-2">
-            Upload and analyze a feedback file to view its results.
-          </p>
-        </div>
-      </div>
-    );
-  }
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-  const { sentiment, categories, insights, reviews } = selectedDataset;
+        setLoadingDatasets(true);
+        setError("");
 
-  const totalReviews = selectedDataset.totalReviews;
+        const data = await getDatasets(token);
+        const userDatasets = data.datasets || [];
 
-  const positivePercentage = Math.round(
-    (sentiment.positive / totalReviews) * 100
-  );
+        setDatasets(userDatasets);
 
-  const negativePercentage = Math.round(
-    (sentiment.negative / totalReviews) * 100
-  );
+        if (userDatasets.length === 0) {
+          setSelectedDataset(null);
+          setSelectedDatasetId("");
+          return;
+        }
 
-  const neutralPercentage = Math.round(
-    (sentiment.neutral / totalReviews) * 100
-  );
+        const requestedDatasetId = location.state?.datasetId;
 
+        const requestedDatasetExists = userDatasets.some(
+          (dataset) => dataset._id === requestedDatasetId
+        );
 
-  /* =====================================================
-     POSITIVE / NEGATIVE / NEUTRAL CATEGORY DATA
-  ===================================================== */
+        const initialDatasetId = requestedDatasetExists
+          ? requestedDatasetId
+          : userDatasets[0]._id;
 
-  const positiveCategories = [...categories]
-    .sort((a, b) => b.positive - a.positive)
-    .filter((category) => category.positive > 0);
+        setSelectedDatasetId(initialDatasetId);
+      } catch (error) {
+        console.error("Failed to load datasets:", error);
 
-  const negativeCategories = [...categories]
-    .sort((a, b) => b.negative - a.negative)
-    .filter((category) => category.negative > 0);
+        setError(
+          error.message || "Failed to load analysis datasets."
+        );
+      } finally {
+        setLoadingDatasets(false);
+      }
+    };
 
-  const neutralCategories = [...categories]
-    .sort((a, b) => b.neutral - a.neutral)
-    .filter((category) => category.neutral > 0);
+    loadDatasets();
+  }, [navigate, location.state]);
 
+  // =====================================================
+  // LOAD SELECTED DATASET
+  // =====================================================
 
-  /* =====================================================
-     FILTER REVIEWS
-  ===================================================== */
+  useEffect(() => {
+    const loadSelectedDataset = async () => {
+      if (!selectedDatasetId) return;
+
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        setLoadingDataset(true);
+        setError("");
+
+        const data = await getDatasetById(
+          selectedDatasetId,
+          token
+        );
+
+        setSelectedDataset({
+          ...data.dataset,
+          reviews: data.reviews || [],
+        });
+
+        setCurrentPage(1);
+        setSearchTerm("");
+        setSentimentFilter("All");
+        setCategoryFilter("All");
+      } catch (error) {
+        console.error("Failed to load dataset:", error);
+
+        setError(
+          error.message || "Failed to load selected dataset."
+        );
+
+        setSelectedDataset(null);
+      } finally {
+        setLoadingDataset(false);
+      }
+    };
+
+    loadSelectedDataset();
+  }, [selectedDatasetId, navigate]);
+
+  // =====================================================
+  // SAFE DATA FOR HOOKS
+  // =====================================================
+
+  const reviews = selectedDataset?.reviews || [];
+
+  // =====================================================
+  // FILTER REVIEWS
+  // IMPORTANT: KEEP THIS BEFORE ANY CONDITIONAL RETURN
+  // =====================================================
 
   const filteredReviews = useMemo(() => {
     return reviews.filter((review) => {
-
       const matchesSearch = review.text
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -104,10 +164,9 @@ const Analysis = () => {
     categoryFilter,
   ]);
 
-
-  /* =====================================================
-     PAGINATION
-  ===================================================== */
+  // =====================================================
+  // PAGINATION
+  // =====================================================
 
   const totalPages = Math.ceil(
     filteredReviews.length / reviewsPerPage
@@ -116,49 +175,187 @@ const Analysis = () => {
   const startIndex =
     (currentPage - 1) * reviewsPerPage;
 
-  const endIndex =
-    startIndex + reviewsPerPage;
+  const endIndex = startIndex + reviewsPerPage;
 
   const visibleReviews = filteredReviews.slice(
     startIndex,
     endIndex
   );
 
+  // =====================================================
+  // LOADING STATE
+  // =====================================================
+
+  if (loadingDatasets) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Loading Analysis...
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            Fetching your feedback datasets.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // ERROR STATE
+  // =====================================================
+
+  if (error && !selectedDataset) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-red-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-red-600">
+            Failed to Load Analysis
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            {error}
+          </p>
+
+          <button
+            onClick={() => navigate("/upload")}
+            className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+          >
+            Upload Feedback
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // NO DATASET
+  // =====================================================
+
+  if (!selectedDataset && datasets.length === 0) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-slate-900">
+            No Analysis Available
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            Upload and analyze a feedback file to view its results.
+          </p>
+
+          <button
+            onClick={() => navigate("/upload")}
+            className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+          >
+            Upload Feedback
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // DATASET LOADING
+  // =====================================================
+
+  if (loadingDataset || !selectedDataset) {
+    return (
+      <div className="p-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Loading Dataset...
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-2">
+            Fetching analysis results and reviews.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // SELECTED DATASET DATA
+  // =====================================================
+
+  const {
+    sentiment,
+    categories,
+    insights,
+  } = selectedDataset;
+
+  const totalReviews = selectedDataset.totalReviews || 0;
+
+  const positivePercentage =
+    totalReviews > 0
+      ? Math.round(
+          (sentiment.positive / totalReviews) * 100
+        )
+      : 0;
+
+  const negativePercentage =
+    totalReviews > 0
+      ? Math.round(
+          (sentiment.negative / totalReviews) * 100
+        )
+      : 0;
+
+  const neutralPercentage =
+    totalReviews > 0
+      ? Math.round(
+          (sentiment.neutral / totalReviews) * 100
+        )
+      : 0;
+
+  // =====================================================
+  // CATEGORY DATA
+  // =====================================================
+
+  const positiveCategories = [...categories]
+    .sort((a, b) => b.positive - a.positive)
+    .filter((category) => category.positive > 0);
+
+  const negativeCategories = [...categories]
+    .sort((a, b) => b.negative - a.negative)
+    .filter((category) => category.negative > 0);
+
+  const neutralCategories = [...categories]
+    .sort((a, b) => b.neutral - a.neutral)
+    .filter((category) => category.neutral > 0);
+
+  // =====================================================
+  // HANDLERS
+  // =====================================================
 
   const handleDatasetChange = (event) => {
     setSelectedDatasetId(event.target.value);
-
-    setSearchTerm("");
-    setSentimentFilter("All");
-    setCategoryFilter("All");
-    setCurrentPage(1);
   };
-
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(1);
   };
 
-
   const handleSentimentChange = (event) => {
     setSentimentFilter(event.target.value);
     setCurrentPage(1);
   };
-
 
   const handleCategoryChange = (event) => {
     setCategoryFilter(event.target.value);
     setCurrentPage(1);
   };
 
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="p-8">
 
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
 
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-8">
 
@@ -172,8 +369,7 @@ const Analysis = () => {
           </p>
         </div>
 
-
-        {/* Dataset Selector */}
+        {/* DATASET SELECTOR */}
 
         <div>
           <label
@@ -191,8 +387,8 @@ const Analysis = () => {
           >
             {datasets.map((dataset) => (
               <option
-                key={dataset.id}
-                value={dataset.id}
+                key={dataset._id}
+                value={dataset._id}
               >
                 {dataset.fileName}
               </option>
@@ -202,17 +398,21 @@ const Analysis = () => {
 
       </div>
 
+      {/* ERROR */}
 
-      {/* =====================================================
-          DATASET HEADER
-      ===================================================== */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {/* DATASET HEADER */}
 
       <div className="bg-white border border-slate-200 rounded-xl p-6">
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
           <div>
-
             <p className="text-xs font-medium text-slate-500 uppercase">
               Selected Dataset
             </p>
@@ -224,9 +424,7 @@ const Analysis = () => {
             <p className="text-sm text-slate-500 mt-1">
               {totalReviews} consumer reviews analyzed
             </p>
-
           </div>
-
 
           <span className="w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
             Analysis Complete
@@ -236,15 +434,11 @@ const Analysis = () => {
 
       </div>
 
-
-      {/* =====================================================
-          SENTIMENT ANALYSIS
-      ===================================================== */}
+      {/* SENTIMENT ANALYSIS */}
 
       <div className="mt-8">
 
         <div className="mb-5">
-
           <h3 className="text-lg font-semibold text-slate-900">
             Sentiment Analysis
           </h3>
@@ -252,14 +446,11 @@ const Analysis = () => {
           <p className="text-sm text-slate-500 mt-1">
             Overall emotional distribution across consumer feedback.
           </p>
-
         </div>
-
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-
-          {/* Sentiment Visual */}
+          {/* SENTIMENT VISUAL */}
 
           <div className="bg-white border border-slate-200 rounded-xl p-6">
 
@@ -267,11 +458,7 @@ const Analysis = () => {
               Sentiment Distribution
             </h4>
 
-
             <div className="flex flex-col sm:flex-row items-center gap-8 mt-6">
-
-
-              {/* Donut */}
 
               <div
                 className="h-44 w-44 rounded-full flex items-center justify-center"
@@ -282,8 +469,8 @@ const Analysis = () => {
                     positivePercentage + neutralPercentage
                   }%,
                     #ef4444 ${
-                      positivePercentage + neutralPercentage
-                    }% 100%
+                    positivePercentage + neutralPercentage
+                  }% 100%
                   )`,
                 }}
               >
@@ -302,20 +489,15 @@ const Analysis = () => {
 
               </div>
 
-
-              {/* Legend */}
-
               <div className="space-y-4">
 
                 <div>
                   <div className="flex items-center gap-2">
-
                     <span className="h-3 w-3 rounded-full bg-green-500"></span>
 
                     <span className="text-sm text-slate-600">
                       Positive
                     </span>
-
                   </div>
 
                   <p className="text-lg font-semibold text-slate-900 ml-5">
@@ -323,16 +505,13 @@ const Analysis = () => {
                   </p>
                 </div>
 
-
                 <div>
                   <div className="flex items-center gap-2">
-
                     <span className="h-3 w-3 rounded-full bg-slate-400"></span>
 
                     <span className="text-sm text-slate-600">
                       Neutral
                     </span>
-
                   </div>
 
                   <p className="text-lg font-semibold text-slate-900 ml-5">
@@ -340,16 +519,13 @@ const Analysis = () => {
                   </p>
                 </div>
 
-
                 <div>
                   <div className="flex items-center gap-2">
-
                     <span className="h-3 w-3 rounded-full bg-red-500"></span>
 
                     <span className="text-sm text-slate-600">
                       Negative
                     </span>
-
                   </div>
 
                   <p className="text-lg font-semibold text-slate-900 ml-5">
@@ -363,8 +539,7 @@ const Analysis = () => {
 
           </div>
 
-
-          {/* Sentiment Summary */}
+          {/* SENTIMENT SUMMARY */}
 
           <div className="bg-white border border-slate-200 rounded-xl p-6">
 
@@ -372,14 +547,9 @@ const Analysis = () => {
               Sentiment Summary
             </h4>
 
-
             <div className="space-y-6 mt-6">
 
-
-              {/* Positive */}
-
               <div>
-
                 <div className="flex justify-between mb-2">
 
                   <span className="text-sm font-medium text-slate-600">
@@ -402,11 +572,7 @@ const Analysis = () => {
                   />
 
                 </div>
-
               </div>
-
-
-              {/* Negative */}
 
               <div>
 
@@ -434,9 +600,6 @@ const Analysis = () => {
                 </div>
 
               </div>
-
-
-              {/* Neutral */}
 
               <div>
 
@@ -473,15 +636,11 @@ const Analysis = () => {
 
       </div>
 
-
-      {/* =====================================================
-          POSITIVE / NEGATIVE ANALYSIS
-      ===================================================== */}
+      {/* POSITIVE / NEGATIVE ANALYSIS */}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
 
-
-        {/* Positive Analysis */}
+        {/* POSITIVE */}
 
         <div className="bg-white border border-slate-200 rounded-xl p-6">
 
@@ -496,7 +655,6 @@ const Analysis = () => {
             </p>
 
           </div>
-
 
           <div className="space-y-5">
 
@@ -536,15 +694,13 @@ const Analysis = () => {
 
                 </div>
               );
-
             })}
 
           </div>
 
         </div>
 
-
-        {/* Negative Analysis */}
+        {/* NEGATIVE */}
 
         <div className="bg-white border border-slate-200 rounded-xl p-6">
 
@@ -559,7 +715,6 @@ const Analysis = () => {
             </p>
 
           </div>
-
 
           <div className="space-y-5">
 
@@ -599,7 +754,6 @@ const Analysis = () => {
 
                 </div>
               );
-
             })}
 
           </div>
@@ -608,10 +762,7 @@ const Analysis = () => {
 
       </div>
 
-
-      {/* =====================================================
-          NEUTRAL ANALYSIS
-      ===================================================== */}
+      {/* NEUTRAL ANALYSIS */}
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
 
@@ -626,7 +777,6 @@ const Analysis = () => {
           </p>
 
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
@@ -657,119 +807,104 @@ const Analysis = () => {
 
       </div>
 
+      {/* CATEGORY × SENTIMENT */}
 
-      {/* =====================================================
-          CATEGORY × SENTIMENT
-      ===================================================== */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
 
-     {/* ================= CATEGORY × SENTIMENT ================= */}
+        <div className="mb-6">
 
-<div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Category × Sentiment Analysis
+          </h3>
 
-<div className="mb-6">
+          <p className="text-sm text-slate-500 mt-1">
+            Compare positive, neutral, and negative feedback across issue categories.
+          </p>
 
-  <h3 className="text-lg font-semibold text-slate-900">
-    Category × Sentiment Analysis
-  </h3>
+        </div>
 
-  <p className="text-sm text-slate-500 mt-1">
-    Compare positive, neutral, and negative feedback across issue categories.
-  </p>
+        <div className="overflow-x-auto">
 
-</div>
+          <table className="w-full text-left">
 
+            <thead>
 
-<div className="overflow-x-auto">
+              <tr className="border-b border-slate-200 text-sm text-slate-500">
 
-  <table className="w-full text-left">
+                <th className="pb-3 font-medium">
+                  Issue Category
+                </th>
 
-    <thead>
+                <th className="pb-3 font-medium text-center">
+                  Positive
+                </th>
 
-      <tr className="border-b border-slate-200 text-sm text-slate-500">
+                <th className="pb-3 font-medium text-center">
+                  Neutral
+                </th>
 
-        <th className="pb-3 font-medium">
-          Issue Category
-        </th>
+                <th className="pb-3 font-medium text-center">
+                  Negative
+                </th>
 
-        <th className="pb-3 font-medium text-center">
-          Positive
-        </th>
+                <th className="pb-3 font-medium text-center">
+                  Total
+                </th>
 
-        <th className="pb-3 font-medium text-center">
-          Neutral
-        </th>
+              </tr>
 
-        <th className="pb-3 font-medium text-center">
-          Negative
-        </th>
+            </thead>
 
-        <th className="pb-3 font-medium text-center">
-          Total
-        </th>
+            <tbody>
 
-      </tr>
+              {categories.map((category) => {
 
-    </thead>
+                const total =
+                  category.positive +
+                  category.neutral +
+                  category.negative;
 
+                return (
 
-    <tbody>
+                  <tr
+                    key={category.name}
+                    className="border-b border-slate-100 last:border-none"
+                  >
 
-      {categories.map((category) => {
+                    <td className="py-4 text-sm font-medium text-slate-700">
+                      {category.name}
+                    </td>
 
-        const total =
-          category.positive +
-          category.neutral +
-          category.negative;
+                    <td className="py-4 text-sm text-center text-slate-700">
+                      {category.positive}
+                    </td>
 
-        return (
+                    <td className="py-4 text-sm text-center text-slate-700">
+                      {category.neutral}
+                    </td>
 
-          <tr
-            key={category.name}
-            className="border-b border-slate-100 last:border-none"
-          >
+                    <td className="py-4 text-sm text-center text-slate-700">
+                      {category.negative}
+                    </td>
 
-            <td className="py-4 text-sm font-medium text-slate-700">
-              {category.name}
-            </td>
+                    <td className="py-4 text-sm text-center font-semibold text-slate-900">
+                      {total}
+                    </td>
 
+                  </tr>
 
-            <td className="py-4 text-sm text-center text-slate-700">
-              {category.positive}
-            </td>
+                );
+              })}
 
+            </tbody>
 
-            <td className="py-4 text-sm text-center text-slate-700">
-              {category.neutral}
-            </td>
+          </table>
 
+        </div>
 
-            <td className="py-4 text-sm text-center text-slate-700">
-              {category.negative}
-            </td>
+      </div>
 
-
-            <td className="py-4 text-sm text-center font-semibold text-slate-900">
-              {total}
-            </td>
-
-          </tr>
-
-        );
-
-      })}
-
-    </tbody>
-
-  </table>
-
-</div>
-
-</div>
-
-
-      {/* =====================================================
-          AI INSIGHTS
-      ===================================================== */}
+      {/* AI INSIGHTS */}
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
 
@@ -784,7 +919,6 @@ const Analysis = () => {
           </p>
 
         </div>
-
 
         <div className="space-y-3">
 
@@ -811,10 +945,7 @@ const Analysis = () => {
 
       </div>
 
-
-      {/* =====================================================
-          REVIEW EXPLORER
-      ===================================================== */}
+      {/* REVIEW EXPLORER */}
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
 
@@ -830,13 +961,9 @@ const Analysis = () => {
 
         </div>
 
-
-        {/* Filters */}
+        {/* FILTERS */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-
-          {/* Search */}
 
           <input
             type="text"
@@ -845,9 +972,6 @@ const Analysis = () => {
             onChange={handleSearchChange}
             className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           />
-
-
-          {/* Sentiment */}
 
           <select
             value={sentimentFilter}
@@ -872,9 +996,6 @@ const Analysis = () => {
             </option>
 
           </select>
-
-
-          {/* Category */}
 
           <select
             value={categoryFilter}
@@ -901,27 +1022,32 @@ const Analysis = () => {
 
         </div>
 
-
-        {/* Review Count */}
+        {/* REVIEW COUNT */}
 
         <div className="flex items-center justify-between mb-4">
 
           <p className="text-xs text-slate-500">
 
             Showing{" "}
+
             {filteredReviews.length === 0
               ? 0
               : startIndex + 1}
+
             –
-            {Math.min(endIndex, filteredReviews.length)}{" "}
+
+            {Math.min(
+              endIndex,
+              filteredReviews.length
+            )}{" "}
+
             of {filteredReviews.length} reviews
 
           </p>
 
         </div>
 
-
-        {/* Review Table */}
+        {/* REVIEW TABLE */}
 
         <div className="overflow-x-auto">
 
@@ -947,7 +1073,6 @@ const Analysis = () => {
 
             </thead>
 
-
             <tbody>
 
               {visibleReviews.length > 0 ? (
@@ -955,14 +1080,13 @@ const Analysis = () => {
                 visibleReviews.map((review) => (
 
                   <tr
-                    key={review.id}
+                    key={review._id}
                     className="border-b border-slate-100 last:border-none"
                   >
 
                     <td className="py-4 pr-6 text-sm text-slate-700">
                       {review.text}
                     </td>
-
 
                     <td className="py-4">
 
@@ -979,7 +1103,6 @@ const Analysis = () => {
                       </span>
 
                     </td>
-
 
                     <td className="py-4 text-sm text-slate-600">
                       {review.category}
@@ -1010,8 +1133,7 @@ const Analysis = () => {
 
         </div>
 
-
-        {/* Pagination */}
+        {/* PAGINATION */}
 
         {totalPages > 1 && (
 
@@ -1027,17 +1149,17 @@ const Analysis = () => {
               ← Previous
             </button>
 
-
             <div className="text-sm text-slate-500">
 
               Page{" "}
+
               <span className="font-medium text-slate-900">
                 {currentPage}
               </span>{" "}
+
               of {totalPages}
 
             </div>
-
 
             <button
               disabled={currentPage === totalPages}

@@ -68,7 +68,7 @@ const RecentFeedback = ({ reviews,datasetId }) => {
             {recentReviews.map((review) => (
 
               <tr
-                key={review.id}
+                key={review._id}
                 className="border-b border-slate-100 last:border-0"
               >
 
