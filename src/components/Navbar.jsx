@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, Home, LogOut } from "lucide-react";
+import { ChevronDown, Home, LogOut, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -36,7 +36,7 @@ const Navbar = () => {
 
     "/settings": {
       title: "Settings",
-      subtitle: "Manage your account and preferences",
+      subtitle: "Manage your account information",
     },
   };
 
@@ -54,6 +54,11 @@ const Navbar = () => {
     navigate("/login", { replace: true });
   };
 
+  const handleSettings = () => {
+    setShowProfileMenu(false);
+    navigate("/settings");
+  };
+
   const userName = user?.name || "Nikhilesh";
 
   const userInitials = user?.name
@@ -66,67 +71,56 @@ const Navbar = () => {
     : "NS";
 
   return (
-    <header className="h-20 bg-white border-b border-slate-200">
+    <header className="h-[76px] bg-white border-b border-[#e2e8f0]">
+
       <div className="h-full px-8 flex items-center justify-between">
 
-        {/* LEFT */}
+        {/* ================= LEFT ================= */}
 
         <div className="flex items-center gap-4">
 
-          {/* Small Home Indicator */}
+          {/* Page Indicator */}
 
-          <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center">
+          <div className="h-9 w-9 rounded-lg bg-[#eff6ff] flex items-center justify-center">
             <Home
               size={17}
-              className="text-slate-500"
+              className="text-[#416f9f]"
+              strokeWidth={2}
             />
           </div>
 
-          <div className="h-8 w-px bg-slate-200" />
+          <div className="h-7 w-px bg-[#e2e8f0]" />
 
           <div>
-            <h1 className="text-lg font-semibold text-slate-900 leading-tight">
+
+            <h1 className="text-[18px] font-semibold text-[#172033] leading-tight">
               {currentPage.title}
             </h1>
 
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#64748b] mt-1">
               {currentPage.subtitle}
             </p>
+
           </div>
 
         </div>
 
-        {/* RIGHT */}
 
-        <div className="flex items-center gap-3">
+        {/* ================= RIGHT ================= */}
 
-          {/* Notification */}
-
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
-          >
-            <Bell size={18} />
-
-            <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-red-500" />
-          </button>
-
-          {/* Divider */}
-
-          <div className="h-8 w-px bg-slate-200 mx-1" />
-
-          {/* Profile */}
+        <div className="flex items-center">
 
           <div className="relative">
+
+            {/* Profile Button */}
 
             <button
               type="button"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50 transition"
+              className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[#f8fafc] transition"
             >
 
-              <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-full bg-[#315f8f] flex items-center justify-center">
                 <span className="text-xs font-semibold text-white">
                   {userInitials}
                 </span>
@@ -134,11 +128,11 @@ const Navbar = () => {
 
               <div className="text-left hidden sm:block">
 
-                <p className="text-sm font-medium text-slate-800 leading-tight">
+                <p className="text-sm font-medium text-[#172033] leading-tight">
                   {userName}
                 </p>
 
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#64748b] mt-0.5">
                   CSE Student
                 </p>
 
@@ -146,22 +140,56 @@ const Navbar = () => {
 
               <ChevronDown
                 size={16}
-                className="text-slate-400"
+                className={`text-[#64748b] transition-transform ${
+                  showProfileMenu ? "rotate-180" : ""
+                }`}
               />
 
             </button>
 
-            {/* Profile Dropdown */}
+
+            {/* ================= PROFILE DROPDOWN ================= */}
 
             {showProfileMenu && (
-              <div className="absolute right-0 top-14 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+              <div className="absolute right-0 top-14 w-52 bg-white border border-[#e2e8f0] rounded-xl shadow-lg py-2 z-50">
+
+                <div className="px-4 py-3 border-b border-[#e2e8f0]">
+
+                  <p className="text-sm font-medium text-[#172033]">
+                    {userName}
+                  </p>
+
+                  <p className="text-xs text-[#64748b] mt-1">
+                    {user?.email || "CSE Student"}
+                  </p>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  onClick={handleSettings}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#334155] hover:bg-[#f8fafc] transition"
+                >
+                  <Settings
+                    size={16}
+                    className="text-[#64748b]"
+                  />
+
+                  Settings
+                </button>
+
 
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#334155] hover:bg-[#f8fafc] transition"
                 >
-                  <LogOut size={17} className="text-slate-500" />
+                  <LogOut
+                    size={16}
+                    className="text-[#64748b]"
+                  />
+
                   Logout
                 </button>
 
@@ -173,6 +201,7 @@ const Navbar = () => {
         </div>
 
       </div>
+
     </header>
   );
 };

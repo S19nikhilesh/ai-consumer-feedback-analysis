@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { getDatasets, getDatasetById } from "../services/api";
 
 import StatCard from "../components/StatCard";
-import SentimentChart from "../components/SentimentChart";
 import RecentFeedback from "../components/RecentFeedback";
 import IssueCategoryChart from "../components/IssueCategoryChart";
 
@@ -76,17 +75,15 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
-
-          <h2 className="text-xl font-semibold text-slate-900">
+      <div className="p-8 bg-[#f8fafc] min-h-[calc(100vh-76px)]">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-10 text-center">
+          <h2 className="text-xl font-semibold text-[#172033]">
             Loading Dashboard...
           </h2>
 
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-[#64748b] mt-2">
             Fetching your latest analysis.
           </p>
-
         </div>
       </div>
     );
@@ -98,24 +95,22 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="p-8">
+      <div className="p-8 bg-[#f8fafc] min-h-[calc(100vh-76px)]">
         <div className="bg-white border border-red-200 rounded-xl p-10 text-center">
-
           <h2 className="text-xl font-semibold text-red-600">
             Failed to Load Dashboard
           </h2>
 
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-[#64748b] mt-2">
             {error}
           </p>
 
           <button
             onClick={() => window.location.reload()}
-            className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+            className="mt-6 px-5 py-2.5 bg-[#315f8f] text-white rounded-lg text-sm font-medium hover:bg-[#274e76] transition"
           >
             Try Again
           </button>
-
         </div>
       </div>
     );
@@ -127,23 +122,23 @@ const Dashboard = () => {
 
   if (!latestDataset) {
     return (
-      <div className="p-8">
+      <div className="p-8 bg-[#f8fafc] min-h-[calc(100vh-76px)]">
+        <div className="max-w-3xl">
+          <h2 className="text-2xl font-semibold text-[#172033]">
+            Overview
+          </h2>
 
-        <h2 className="text-2xl font-bold text-slate-900">
-          Overview
-        </h2>
+          <p className="text-sm text-[#64748b] mt-2">
+            No analyzed feedback available yet.
+          </p>
 
-        <p className="text-sm text-slate-500 mt-1">
-          No analyzed feedback available yet.
-        </p>
-
-        <button
-          onClick={() => navigate("/upload")}
-          className="mt-6 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-        >
-          Upload Feedback
-        </button>
-
+          <button
+            onClick={() => navigate("/upload")}
+            className="mt-6 px-5 py-2.5 bg-[#315f8f] text-white rounded-lg text-sm font-medium hover:bg-[#274e76] transition"
+          >
+            Upload Feedback
+          </button>
+        </div>
       </div>
     );
   }
@@ -153,63 +148,89 @@ const Dashboard = () => {
   // =====================================================
 
   const {
-    sentiment,
-    categories,
-    reviews,
+    sentiment = {},
+    reviews = [],
   } = latestDataset;
 
   const totalReviews = latestDataset.totalReviews || 0;
 
   const positivePercentage =
     totalReviews > 0
-      ? (
-          (sentiment.positive / totalReviews) *
-          100
-        ).toFixed(1)
+      ? ((sentiment.positive / totalReviews) * 100).toFixed(1)
       : "0.0";
 
   const negativePercentage =
     totalReviews > 0
-      ? (
-          (sentiment.negative / totalReviews) *
-          100
-        ).toFixed(1)
+      ? ((sentiment.negative / totalReviews) * 100).toFixed(1)
       : "0.0";
 
   const neutralPercentage =
     totalReviews > 0
-      ? (
-          (sentiment.neutral / totalReviews) *
-          100
-        ).toFixed(1)
+      ? ((sentiment.neutral / totalReviews) * 100).toFixed(1)
       : "0.0";
+
+  // =====================================================
+  // CATEGORY + SENTIMENT AGGREGATION
+  // =====================================================
+
+  const categorySentiment = {};
+
+  reviews.forEach((review) => {
+    const category = review.category || "Other";
+    const sentimentValue = (
+      review.sentiment || "neutral"
+    ).toLowerCase();
+
+    if (!categorySentiment[category]) {
+      categorySentiment[category] = {
+        positive: 0,
+        negative: 0,
+        neutral: 0,
+      };
+    }
+
+    if (sentimentValue === "positive") {
+      categorySentiment[category].positive += 1;
+    } else if (sentimentValue === "negative") {
+      categorySentiment[category].negative += 1;
+    } else {
+      categorySentiment[category].neutral += 1;
+    }
+  });
 
   // =====================================================
   // UI
   // =====================================================
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-[#f8fafc] min-h-[calc(100vh-76px)]">
 
       {/* ================= HEADER ================= */}
 
-      <div className="mb-6">
+      <div className="mb-7">
+        <div className="flex items-start justify-between gap-6">
 
-        <h2 className="text-2xl font-bold text-slate-900">
-          Overview
-        </h2>
+          <div>
+            <h2 className="text-2xl font-semibold text-[#172033]">
+              Overview
+            </h2>
 
-        <p className="text-sm text-slate-500 mt-1">
-          Monitor consumer feedback and sentiment insights.
-        </p>
+            <p className="text-sm text-[#64748b] mt-1.5">
+              Monitor consumer feedback and sentiment insights.
+            </p>
+          </div>
 
-        <p className="text-xs text-slate-400 mt-2">
-          Showing latest analysis:{" "}
-          <span className="font-medium text-slate-600">
-            {latestDataset.fileName}
-          </span>
-        </p>
+          <div className="text-right">
+            <p className="text-[11px] uppercase tracking-wide font-semibold text-[#94a3b8]">
+              Latest Analysis
+            </p>
 
+            <p className="text-sm font-medium text-[#334155] mt-1">
+              {latestDataset.fileName}
+            </p>
+          </div>
+
+        </div>
       </div>
 
       {/* ================= STAT CARDS ================= */}
@@ -238,26 +259,22 @@ const Dashboard = () => {
 
       </div>
 
-      {/* ================= CHARTS ================= */}
+      {/* ================= CATEGORY ANALYSIS ================= */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
-
-        <SentimentChart
-          sentiment={sentiment}
-        />
-
+      <div className="mt-6">
         <IssueCategoryChart
-          categories={categories}
+          categorySentiment={categorySentiment}
         />
-
       </div>
 
       {/* ================= RECENT FEEDBACK ================= */}
 
-      <RecentFeedback
-        reviews={reviews}
-        datasetId={latestDataset._id}
-      />
+      <div className="mt-6">
+        <RecentFeedback
+          reviews={reviews}
+          datasetId={latestDataset._id}
+        />
+      </div>
 
     </div>
   );
